@@ -1,0 +1,26 @@
+[package]
+name = "yaxpeax-dis"
+version = "0.1.0"
+authors = ["iximeow <me@iximeow.net>"]
+edition = "2018"
+description = "disassembly tool using yaxpeax instruction decoders"
+
+[[bin]]
+name = "yaxdis"
+path = "src/main.rs"
+
+[dependencies]
+clap = "2.33"
+hex = "0.4.0"
+num-traits = "0.2.10"
+
+# common interfaces for all yaxpeax decoders
+yaxpeax-arch = { path = "../yaxpeax-arch" }
+
+yaxpeax-arm = { path = "../arch/arm" }
+yaxpeax-mips = { path = "../arch/mips" }
+yaxpeax-msp430-mc = { path = "../arch/msp430" }
+yaxpeax-pic17 = { path = "../arch/pic17" }
+yaxpeax-pic18 = { path = "../arch/pic18" }
+yaxpeax-pic24 = { path = "../arch/pic24" }
+yaxpeax-x86 = { path = "../arch/x86" }
