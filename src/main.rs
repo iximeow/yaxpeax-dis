@@ -1,36 +1,37 @@
-use yaxpeax_arch::{Address, Arch, Decoder, Instruction, LengthedInstruction};
+use yaxpeax_arch::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction};
 
-use clap::{Arg, App};
+use clap::*;
 use num_traits::identities::Zero;
 
 use std::fmt;
 
 fn main() {
-    let matches = App::new("yaxpeax disassembler")
-        .version("0.0.1")
-        .author("iximeow <me@iximeow.net>")
-        .about("disassembly tool using yaxpeax decoders")
+    let _ = include_str!("../Cargo.toml");
+    let app = app_from_crate!()
         .arg(Arg::with_name("arch")
              .short("a")
-             .long("architecture")
+             .long("--architecture")
              .takes_value(true)
-             .help("architecture to disassemble input as"))
+             .possible_values(&["x86_64", "armv7", "armv8", "mips", "msp430", "pic17", "pic18", "m16c"])
+             .help("architecture to disassemble input as."))
+        /*
         .arg(Arg::with_name("file")
              .short("f")
              .long("file")
              .takes_value(true)
              .help("file of bytes to decode"))
+             */
         .arg(Arg::with_name("verbose")
              .short("v")
-             .long("verbose")
+             .long("--verbose")
              .help("increased detail when decoding instructions"))
         .arg(Arg::with_name("data")
-             .index(1))
-        .get_matches();
+             .required(true)
+             .help("hex bytes to decode by the selected architecture. for example, try -a x86_64 33c0c3"));
+
+    let matches = app.get_matches();
 
     let arch_str = matches.value_of("arch").unwrap_or("x86_64");
-    eprintln!("disassembling as {}", arch_str);
-//    let file = matches.value_of("file").unwrap();
     let buf: &str = matches.value_of("data").unwrap_or("");
     let verbose = matches.occurrences_of("verbose") > 0;
 
@@ -39,9 +40,10 @@ fn main() {
         "armv7" => decode_input::<yaxpeax_arm::armv7::ARMv7>(buf, verbose),
         "armv8" => decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(buf, verbose),
         "mips" => decode_input::<yaxpeax_mips::MIPS>(buf, verbose),
-        "msp430" => decode_input::<yaxpeax_msp430_mc::MSP430>(buf, verbose),
+        "msp430" => decode_input::<yaxpeax_msp430::MSP430>(buf, verbose),
         "pic17" => decode_input::<yaxpeax_pic17::PIC17>(buf, verbose),
         "pic18" => decode_input::<yaxpeax_pic18::PIC18>(buf, verbose),
+        "m16c" => decode_input::<yaxpeax_m16c::M16C>(buf, verbose),
 //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
             println!("unsupported architecture: {}", other);
