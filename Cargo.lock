@@ -48,17 +48,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "derivative"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "942ca430eef7a3806595a6737bc388bf51adb888d3fc0dd1b50f1c170167ee3a"
-dependencies = [
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "syn 0.15.44",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -72,12 +61,6 @@ name = "hex"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "023b39be39e3a2da62a94feb433e91e8bcd37676fbc8bea371daf52b7a769a3e"
-
-[[package]]
-name = "itoa"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
 
 [[package]]
 name = "libc"
@@ -96,24 +79,13 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.4.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be601e38e20a6f3d01049d85801cb9b7a34a8da7a0da70df507bbde7735058c8"
+checksum = "fae2a63210048cf77ceb6031b3f87ac69e4a68cfaacb17a0261e141c4bc8467b"
 dependencies = [
- "derivative",
- "num_enum_derive",
-]
-
-[[package]]
-name = "num_enum_derive"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b59f30f6a043f2606adbd0addbf1eef6f2e28e8c4968918b63b7ff97ac0db2a7"
-dependencies = [
- "proc-macro-crate",
- "proc-macro2 1.0.7",
- "quote 1.0.2",
- "syn 1.0.13",
+ "proc-macro2 0.4.30",
+ "quote 0.6.13",
+ "syn 0.15.44",
 ]
 
 [[package]]
@@ -121,15 +93,6 @@ name = "numtoa"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
-
-[[package]]
-name = "proc-macro-crate"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e10d4b51f154c8a7fb96fd6dad097cb74b863943ec010ac94b9fd1be8861fe1e"
-dependencies = [
- "toml",
-]
 
 [[package]]
 name = "proc-macro2"
@@ -183,12 +146,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ryu"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa8506c1de11c9c4e4c38863ccbe02a305c8188e85a05a784c9e11e1c3910c8"
-
-[[package]]
 name = "serde"
 version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -203,17 +160,6 @@ dependencies = [
  "proc-macro2 1.0.7",
  "quote 1.0.2",
  "syn 1.0.13",
-]
-
-[[package]]
-name = "serde_json"
-version = "1.0.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c575e0cc52bdd09b47f330f646cf59afc586e9c4e3ccd6fc1f625b8ea1dad7"
-dependencies = [
- "itoa",
- "ryu",
- "serde",
 ]
 
 [[package]]
@@ -266,15 +212,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "toml"
-version = "0.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01d1404644c8b12b16bfcffa4322403a91a451584daaaa7c28d3152e6cbc98cf"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "unicode-width"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -322,7 +259,9 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "yaxpeax-arch"
-version = "0.0.1"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab52e5031be876437d8db20de2074486ce6a49e3a0809a8e8b291a307ea808a2"
 dependencies = [
  "num-traits",
  "serde",
@@ -331,7 +270,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-arm"
-version = "0.0.1"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d7b631720783f1ea2eeddf0de1643c5c90a2777921816294db8fd876ccd53dc"
 dependencies = [
  "serde",
  "serde_derive",
@@ -347,71 +288,74 @@ dependencies = [
  "num-traits",
  "yaxpeax-arch",
  "yaxpeax-arm",
+ "yaxpeax-m16c",
  "yaxpeax-mips",
- "yaxpeax-msp430-mc",
+ "yaxpeax-msp430",
  "yaxpeax-pic17",
  "yaxpeax-pic18",
- "yaxpeax-pic24",
  "yaxpeax-x86",
 ]
 
 [[package]]
-name = "yaxpeax-mips"
-version = "0.0.1"
+name = "yaxpeax-m16c"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00248964a847ea31080732852503377cbef24144226a42693865700312e9b0c1"
 dependencies = [
- "num_enum",
+ "num-traits",
  "serde",
  "serde_derive",
+ "yaxpeax-arch",
+]
+
+[[package]]
+name = "yaxpeax-mips"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "522a0f8af9ca110ab99d29071a4f7953eb7025c3698461bd1adc36dc8a03523f"
+dependencies = [
+ "num_enum",
  "termion",
  "yaxpeax-arch",
 ]
 
 [[package]]
-name = "yaxpeax-msp430-mc"
-version = "0.0.1"
+name = "yaxpeax-msp430"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c1885d516b165a9799ff0a02af51263e2198215ea03097a582f41f3efa34259"
 dependencies = [
- "serde",
- "serde_derive",
  "termion",
  "yaxpeax-arch",
 ]
 
 [[package]]
 name = "yaxpeax-pic17"
-version = "0.0.1"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52f7c1a9869cda40d584e0b6356bc94ea7dbb8b64c5756fb268f33134fc5a75d"
 dependencies = [
- "serde",
- "serde_derive",
  "termion",
  "yaxpeax-arch",
 ]
 
 [[package]]
 name = "yaxpeax-pic18"
-version = "0.0.1"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5695d4bed74eb94a8a06439ed67cb4f7b244121bf56d735e64facb7b5c698b6"
 dependencies = [
- "serde",
- "serde_derive",
- "yaxpeax-arch",
-]
-
-[[package]]
-name = "yaxpeax-pic24"
-version = "0.0.1"
-dependencies = [
- "serde",
- "serde_derive",
  "yaxpeax-arch",
 ]
 
 [[package]]
 name = "yaxpeax-x86"
-version = "0.0.1"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c99c7e696c0ef10d67492b728b588dc260d5fa2e33d1e37edcf7cd466c7946b4"
 dependencies = [
  "num-traits",
  "serde",
  "serde_derive",
- "serde_json",
- "termion",
  "yaxpeax-arch",
 ]
