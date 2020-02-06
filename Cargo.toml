@@ -5,6 +5,7 @@ authors = ["iximeow <me@iximeow.net>"]
 license = "0BSD"
 edition = "2018"
 description = "disassembly tool using yaxpeax instruction decoders"
+readme = "README.md"
 
 [[bin]]
 name = "yaxdis"
