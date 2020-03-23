@@ -270,9 +270,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-arm"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d7b631720783f1ea2eeddf0de1643c5c90a2777921816294db8fd876ccd53dc"
+checksum = "2562e1dc153928886795f8f3794716ac0e96ed2ef040f8d29e3246f57d823dd3"
 dependencies = [
  "serde",
  "serde_derive",
@@ -350,9 +350,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-x86"
-version = "0.0.4"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c99c7e696c0ef10d67492b728b588dc260d5fa2e33d1e37edcf7cd466c7946b4"
+checksum = "03c09fe81a0dd37ce551dfe63dd7ee8848abe3fb60a670344e9e5483ecfd5718"
 dependencies = [
  "num-traits",
  "serde",
