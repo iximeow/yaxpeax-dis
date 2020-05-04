@@ -17,12 +17,13 @@ hex = "0.4.0"
 num-traits = "0.2.10"
 
 # common interfaces for all yaxpeax decoders
-yaxpeax-arch = { version = "0.0.3" }
+yaxpeax-arch = { version = "0.0.4" }
 
-yaxpeax-arm = { version = "0.0.3" }
-yaxpeax-mips = { version = "0.0.2" }
-yaxpeax-msp430 = { version = "0.0.3" }
-yaxpeax-pic17 = { version = "0.0.2" }
-yaxpeax-pic18 = { version = "0.0.2" }
-yaxpeax-x86 = { version = "0.0.10" }
-yaxpeax-m16c = { version = "0.0.2" }
+yaxpeax-arm = { version = "0.0.4" }
+yaxpeax-avr = { version = "0.0.2" }
+yaxpeax-m16c = { version = "0.0.3" }
+yaxpeax-mips = { version = "0.0.3" }
+yaxpeax-msp430 = { version = "0.0.5" }
+yaxpeax-pic17 = { version = "0.0.3" }
+yaxpeax-pic18 = { version = "0.0.3" }
+yaxpeax-x86 = { version = "0.0.11" }
