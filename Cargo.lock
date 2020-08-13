@@ -291,7 +291,7 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-dis"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "clap",
  "hex",
@@ -361,9 +361,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-x86"
-version = "0.0.11"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b95531fa2a2fa283d3c2fb3476f43e16e6c83e459d6a87d39dded8b656253207"
+checksum = "dd9da115d2a5dcf23e1c5bfc80456a3ae0fad0fd011926dcaf6166eea97caaa4"
 dependencies = [
  "num-traits",
  "serde",
