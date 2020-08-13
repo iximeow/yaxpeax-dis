@@ -1,11 +1,11 @@
 [package]
 name = "yaxpeax-dis"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["iximeow <me@iximeow.net>"]
 license = "0BSD"
 edition = "2018"
 keywords = ["disassembly", "disassembler"]
-respository = "https://git.iximeow.net/yaxpeax-dis/"
+repository = "https://git.iximeow.net/yaxpeax-dis/"
 description = "disassembly tool using yaxpeax instruction decoders"
 readme = "README.md"
 
@@ -28,4 +28,4 @@ yaxpeax-mips = { version = "0.0.3" }
 yaxpeax-msp430 = { version = "0.0.5" }
 yaxpeax-pic17 = { version = "0.0.3" }
 yaxpeax-pic18 = { version = "0.0.3" }
-yaxpeax-x86 = { version = "0.0.11" }
+yaxpeax-x86 = { version = "0.1.0" }
