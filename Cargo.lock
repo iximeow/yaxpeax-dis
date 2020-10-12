@@ -33,6 +33,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
+name = "bitvec"
+version = "0.19.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11593270830d9b037fbead730bb0c05ef6fbf6be55537a1e8e5892edef7e1f03"
+dependencies = [
+ "funty",
+ "radium",
+ "tap",
+ "wyz",
+]
+
+[[package]]
 name = "clap"
 version = "2.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -46,6 +58,12 @@ dependencies = [
  "unicode-width",
  "vec_map",
 ]
+
+[[package]]
+name = "funty"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ba62103ce691c2fd80fbae2213dfdda9ce60804973ac6b6e97de818ea7f52c8"
 
 [[package]]
 name = "hermit-abi"
@@ -131,6 +149,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "radium"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "941ba9d78d8e2f7ce474c015eea4d9c6d25b6a3327f9832ee29a4de27f91bbb8"
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -189,6 +213,12 @@ dependencies = [
  "quote 1.0.4",
  "unicode-xid 0.2.0",
 ]
+
+[[package]]
+name = "tap"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36474e732d1affd3a6ed582781b3683df3d0563714c59c39591e8ff707cf078e"
 
 [[package]]
 name = "termion"
@@ -258,6 +288,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
+name = "wyz"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
+
+[[package]]
 name = "yaxpeax-arch"
 version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,7 +327,7 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-dis"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "clap",
  "hex",
@@ -299,12 +335,23 @@ dependencies = [
  "yaxpeax-arch",
  "yaxpeax-arm",
  "yaxpeax-avr",
+ "yaxpeax-ia64",
  "yaxpeax-m16c",
  "yaxpeax-mips",
  "yaxpeax-msp430",
  "yaxpeax-pic17",
  "yaxpeax-pic18",
  "yaxpeax-x86",
+]
+
+[[package]]
+name = "yaxpeax-ia64"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7217bde169dd630a6a36ba6d39771b3e62ceabc0cbd33330728c95ed94b2691"
+dependencies = [
+ "bitvec",
+ "yaxpeax-arch",
 ]
 
 [[package]]
@@ -361,9 +408,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-x86"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd9da115d2a5dcf23e1c5bfc80456a3ae0fad0fd011926dcaf6166eea97caaa4"
+checksum = "1421f17039bf6032da3243c2e3f3b8d739da14058ac62ab3c668274fa6140eba"
 dependencies = [
  "num-traits",
  "serde",

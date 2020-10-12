@@ -16,7 +16,7 @@ fn main() {
                 .long("--architecture")
                 .takes_value(true)
                 .possible_values(&[
-                    "x86_64", "x86:32", "armv7", "armv8", "avr", "mips", "msp430", "pic17",
+                    "x86_64", "x86:32", "ia64", "armv7", "armv8", "avr", "mips", "msp430", "pic17",
                     "pic18", "m16c",
                 ])
                 .help("architecture to disassemble input as."),
@@ -74,6 +74,7 @@ fn main() {
     match arch_str {
         "x86_64" => decode_input::<yaxpeax_x86::long_mode::Arch>(&buf, verbose),
         "x86:32" => decode_input::<yaxpeax_x86::protected_mode::Arch>(&buf, verbose),
+        "ia64" => decode_input::<yaxpeax_ia64::IA64>(&buf, verbose),
         "avr" => decode_input::<yaxpeax_avr::AVR>(&buf, verbose),
         "armv7" => decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, verbose),
         "armv8" => decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, verbose),

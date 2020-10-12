@@ -16,8 +16,12 @@ or `yaxdis -a armv7 83591764ab46cd42`, producing:
 0x00000000: 83591764      : ldrvs r5, [r7], #-0x260c
 0x00000004: ab46cd42      : sbcmi sp, 0x46ab
 ```
+or `yaxdis -a ia64 e38000000061e200000042c0e1803080`, producing:
+```
+0x00000000: e38000000061e200000042c0e1803080: [MII] (p07) mov r16=r0; (p09) mov r14=r0;; and r14=r14,r16;;
+```
 
 `yaxdis` also takes a `-v` flag to emit more verbose information (really, a `Debug` display of decoded instructions).
 
 ## supported architectures / ! user beware !
-`yaxdis` should support all architectures listed in the [yaxpeax-arch readme](https://git.iximeow.net/yaxpeax-arch/). that is currently `x86_64`, `armv7`, `armv8`, `mips`, `msp430`, `pic17`, `pic18`, and `m16c`. specific levels of support and stability vary, beware.
+`yaxdis` should support all architectures listed in the [yaxpeax-arch readme](https://git.iximeow.net/yaxpeax-arch/). that is currently `x86_64`, `armv7`, `armv8`, `mips`, `msp430`, `pic17`, `pic18`, `m16c`, `avr`, and `ia64`. specific levels of support and stability vary, beware.
