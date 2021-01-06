@@ -30,3 +30,4 @@ yaxpeax-pic17 = { version = "0.0.3" }
 yaxpeax-pic18 = { version = "0.0.3" }
 yaxpeax-x86 = { version = "0.1.2" }
 yaxpeax-ia64 = { version = "0.1.1" }
+yaxpeax-superh = { version = "0.1.0" }

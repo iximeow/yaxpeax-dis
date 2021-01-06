@@ -341,6 +341,7 @@ dependencies = [
  "yaxpeax-msp430",
  "yaxpeax-pic17",
  "yaxpeax-pic18",
+ "yaxpeax-superh",
  "yaxpeax-x86",
 ]
 
@@ -402,6 +403,15 @@ name = "yaxpeax-pic18"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f5a722e1de4671c1cfe46f54ebe21fe3233823e62d8cc33d698f50b5fcf2e19"
+dependencies = [
+ "yaxpeax-arch",
+]
+
+[[package]]
+name = "yaxpeax-superh"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02789f779dd874674062a7407a1faadcb4dbbb70b313b465a2bdbb562bb4d1f7"
 dependencies = [
  "yaxpeax-arch",
 ]

@@ -6,6 +6,7 @@ use num_traits::identities::Zero;
 use std::fmt;
 use std::fs::File;
 use std::io::Read;
+use std::collections::BTreeSet;
 
 fn main() {
     let _ = include_str!("../Cargo.toml");
@@ -15,10 +16,21 @@ fn main() {
                 .short("a")
                 .long("--architecture")
                 .takes_value(true)
-                .possible_values(&[
-                    "x86_64", "x86:32", "ia64", "armv7", "armv8", "avr", "mips", "msp430", "pic17",
-                    "pic18", "m16c",
-                ])
+                .validator(|a| {
+                    if ["x86_64", "x86:32", "ia64", "armv7", "armv8", "avr", "mips", "msp430",
+                        "pic17", "pic18", "m16c"].contains(&&a[..]) ||
+                       (["sh", "sh2", "sh3", "sh4", "j2"].contains(
+                             &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
+                        a.split(|c| c == '+' || c == '-').skip(1).all(
+                            |f| ["be", "mmu", "fpu", "f64", "j2"].contains(&f))) {
+                        Ok(())
+                    } else {
+                        Err("possible values: x86_64, x86:32, ia64, armv7, armv8, avr, mips, \
+                                              msp430, pic17, pic18, m16c, \
+                                              {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
+                            .to_string())
+                    }
+                })
                 .help("architecture to disassemble input as."),
         )
         .arg(
@@ -85,16 +97,69 @@ fn main() {
         "m16c" => decode_input::<yaxpeax_m16c::M16C>(&buf, verbose),
         //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
-            println!("unsupported architecture: {}", other);
+            let seg_idx = arch_str.find(|c| c == '+' || c == '-').unwrap_or(arch_str.len());
+            let wps = |base| with_parsed_superh(base, &arch_str[seg_idx..],
+                |decoder| decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, verbose));
+            match &arch_str[0..seg_idx] {
+                "sh" => wps(yaxpeax_superh::SuperHDecoder::SH1),
+                "sh2" => wps(yaxpeax_superh::SuperHDecoder::SH2),
+                "sh3" => wps(yaxpeax_superh::SuperHDecoder::SH3),
+                "sh4" => wps(yaxpeax_superh::SuperHDecoder::SH4),
+                "j2" => wps(yaxpeax_superh::SuperHDecoder::J2),
+                _ => println!("unsupported architecture: {}", other),
+            }
         }
     }
+}
+
+fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
+    mut based_on: yaxpeax_superh::SuperHDecoder, mut from: &str, func: F
+) {
+    let mut features = based_on.features.iter().copied().collect::<BTreeSet<_>>();
+
+    while !from.is_empty() {
+        // This would be Not Trash if split_inclusive were stable; alas
+        let op = from.chars().next().unwrap();
+        from = &from[1..];
+
+        let next_feat_idx = from.find(|c| c == '+' || c == '-').unwrap_or(from.len());
+        let feat = &from[0..next_feat_idx];
+        from = &from[next_feat_idx..];
+
+        match (op, feat) {
+            ('+', "be") => based_on.little_endian = false,
+            ('-', "be") => based_on.little_endian = true,
+            ('+', "f64") => based_on.fpscr_sz = true,
+            ('-', "f64") => based_on.fpscr_sz = false,
+
+            ('+', "mmu") => { features.insert(yaxpeax_superh::SuperHFeature::MMU); },
+            ('-', "mmu") => { features.remove(&yaxpeax_superh::SuperHFeature::MMU); },
+            ('+', "fpu") => { features.insert(yaxpeax_superh::SuperHFeature::FPU); },
+            ('-', "fpu") => { features.remove(&yaxpeax_superh::SuperHFeature::FPU); },
+            ('+', "j2") => { features.insert(yaxpeax_superh::SuperHFeature::J2); },
+            ('-', "j2") => { features.remove(&yaxpeax_superh::SuperHFeature::J2); },
+
+            pair => panic!("Who is {:?} and why was it not caught at parse time?", pair),
+        }
+    }
+
+    func(yaxpeax_superh::SuperHDecoder {
+        features: &features.into_iter().collect::<Vec<_>>()[..],
+        ..based_on
+    })
 }
 
 fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
 where
     A::Instruction: fmt::Display,
 {
-    let decoder = A::Decoder::default();
+    decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
+}
+
+fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
+where
+    A::Instruction: fmt::Display,
+{
     let start = A::Address::zero();
     let mut addr = start;
     loop {
