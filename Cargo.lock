@@ -347,9 +347,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-ia64"
-version = "0.1.1"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7217bde169dd630a6a36ba6d39771b3e62ceabc0cbd33330728c95ed94b2691"
+checksum = "c30aa31831bd95d03a6c0f03b3f24a4beba1ec577be36da789df9b5ad3cb828a"
 dependencies = [
  "bitvec",
  "yaxpeax-arch",
@@ -418,9 +418,9 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-x86"
-version = "0.1.2"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1421f17039bf6032da3243c2e3f3b8d739da14058ac62ab3c668274fa6140eba"
+checksum = "84e59dbce1199c094a26c5eac53124375851ca5023e1227b0fa4447fc2508af7"
 dependencies = [
  "num-traits",
  "serde",
