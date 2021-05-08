@@ -18,7 +18,7 @@ fn main() {
                 .takes_value(true)
                 .validator(|a| {
                     if ["x86_64", "x86:32", "ia64", "armv7", "armv8", "avr", "mips", "msp430",
-                        "pic17", "pic18", "m16c"].contains(&&a[..]) ||
+                        "pic17", "pic18", "m16c", "6502"].contains(&&a[..]) ||
                        (["sh", "sh2", "sh3", "sh4", "j2"].contains(
                              &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
                         a.split(|c| c == '+' || c == '-').skip(1).all(
@@ -26,7 +26,7 @@ fn main() {
                         Ok(())
                     } else {
                         Err("possible values: x86_64, x86:32, ia64, armv7, armv8, avr, mips, \
-                                              msp430, pic17, pic18, m16c, \
+                                              msp430, pic17, pic18, m16c, 6502, \
                                               {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
                             .to_string())
                     }
@@ -95,6 +95,7 @@ fn main() {
         "pic17" => decode_input::<yaxpeax_pic17::PIC17>(&buf, verbose),
         "pic18" => decode_input::<yaxpeax_pic18::PIC18>(&buf, verbose),
         "m16c" => decode_input::<yaxpeax_m16c::M16C>(&buf, verbose),
+        "6502" => decode_input::<yaxpeax_6502::N6502>(&buf, verbose),
         //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
             let seg_idx = arch_str.find(|c| c == '+' || c == '-').unwrap_or(arch_str.len());

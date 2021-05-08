@@ -1,6 +1,6 @@
 [package]
 name = "yaxpeax-dis"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["iximeow <me@iximeow.net>"]
 license = "0BSD"
 edition = "2018"
@@ -19,15 +19,16 @@ hex = "0.4.0"
 num-traits = "0.2.10"
 
 # common interfaces for all yaxpeax decoders
-yaxpeax-arch = { version = "0.0.4" }
+yaxpeax-arch = { version = "0.0.5" }
 
-yaxpeax-arm = { version = "0.0.4" }
-yaxpeax-avr = { version = "0.0.2" }
-yaxpeax-m16c = { version = "0.0.3" }
-yaxpeax-mips = { version = "0.0.3" }
-yaxpeax-msp430 = { version = "0.0.5" }
-yaxpeax-pic17 = { version = "0.0.3" }
-yaxpeax-pic18 = { version = "0.0.3" }
-yaxpeax-x86 = { version = "0.1.5" }
-yaxpeax-ia64 = { version = "0.1.3" }
-yaxpeax-superh = { version = "0.1.0" }
+yaxpeax-arm = { version = "0.0.7" }
+yaxpeax-avr = { version = "0.0.3" }
+yaxpeax-m16c = { version = "0.0.4" }
+yaxpeax-mips = { version = "0.0.4" }
+yaxpeax-msp430 = { version = "0.0.6" }
+yaxpeax-pic17 = { version = "0.0.4" }
+yaxpeax-pic18 = { version = "0.0.4" }
+yaxpeax-x86 = { version = "0.2.0" }
+yaxpeax-ia64 = { version = "0.1.4" }
+yaxpeax-superh = { version = "0.1.1" }
+yaxpeax-6502 = { version = "0.0.1" }
