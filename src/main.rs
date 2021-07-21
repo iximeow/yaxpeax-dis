@@ -1,9 +1,5 @@
-use yaxpeax_arch::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction};
-
 use clap::*;
-use num_traits::identities::Zero;
 
-use std::fmt;
 use std::fs::File;
 use std::io::Read;
 use std::collections::BTreeSet;
@@ -17,17 +13,19 @@ fn main() {
                 .long("--architecture")
                 .takes_value(true)
                 .validator(|a| {
-                    if ["x86_64", "x86:32", "ia64", "armv7", "armv8", "avr", "mips", "msp430",
-                        "pic17", "pic18", "m16c", "6502"].contains(&&a[..]) ||
+                    if ["x86_64", "x86_32", "x86_16",
+                        "x86:64", "x86:32", "x86:16",
+                        "ia64", "armv7", "armv8", "avr", "mips", "msp430",
+                        "pic17", "pic18", "m16c", "6502", "lc87"].contains(&&a[..]) ||
                        (["sh", "sh2", "sh3", "sh4", "j2"].contains(
                              &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
                         a.split(|c| c == '+' || c == '-').skip(1).all(
                             |f| ["be", "mmu", "fpu", "f64", "j2"].contains(&f))) {
                         Ok(())
                     } else {
-                        Err("possible values: x86_64, x86:32, ia64, armv7, armv8, avr, mips, \
-                                              msp430, pic17, pic18, m16c, 6502, \
-                                              {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
+                        Err("possible values: x86_64, x86_32, x86_16, x86:64, x86:32, x86:16, \
+                                              ia64, armv7, armv8, avr, mips, msp430, pic17, pic18, \
+                                              m16c, 6502, lc87, {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
                             .to_string())
                     }
                 })
@@ -84,23 +82,28 @@ fn main() {
     let verbose = matches.occurrences_of("verbose") > 0;
 
     match arch_str {
-        "x86_64" => decode_input::<yaxpeax_x86::long_mode::Arch>(&buf, verbose),
-        "x86:32" => decode_input::<yaxpeax_x86::protected_mode::Arch>(&buf, verbose),
-        "ia64" => decode_input::<yaxpeax_ia64::IA64>(&buf, verbose),
-        "avr" => decode_input::<yaxpeax_avr::AVR>(&buf, verbose),
-        "armv7" => decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, verbose),
-        "armv8" => decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, verbose),
-        "mips" => decode_input::<yaxpeax_mips::MIPS>(&buf, verbose),
-        "msp430" => decode_input::<yaxpeax_msp430::MSP430>(&buf, verbose),
-        "pic17" => decode_input::<yaxpeax_pic17::PIC17>(&buf, verbose),
-        "pic18" => decode_input::<yaxpeax_pic18::PIC18>(&buf, verbose),
-        "m16c" => decode_input::<yaxpeax_m16c::M16C>(&buf, verbose),
-        "6502" => decode_input::<yaxpeax_6502::N6502>(&buf, verbose),
+        "x86_64" |
+        "x86:64" => crate::current_arch::decode_input::<yaxpeax_x86::long_mode::Arch>(&buf, verbose),
+        "x86_32" |
+        "x86:32" => crate::current_arch::decode_input::<yaxpeax_x86::protected_mode::Arch>(&buf, verbose),
+        "x86_16" |
+        "x86:16" => crate::current_arch::decode_input::<yaxpeax_x86::real_mode::Arch>(&buf, verbose),
+        "ia64" => crate::current_arch::decode_input::<yaxpeax_ia64::IA64>(&buf, verbose),
+        "avr" => crate::current_arch::decode_input::<yaxpeax_avr::AVR>(&buf, verbose),
+        "armv7" => crate::current_arch::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, verbose),
+        "armv8" => crate::current_arch::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, verbose),
+        "mips" => crate::current_arch::decode_input::<yaxpeax_mips::MIPS>(&buf, verbose),
+        "msp430" => crate::current_arch::decode_input::<yaxpeax_msp430::MSP430>(&buf, verbose),
+        "pic17" => crate::current_arch::decode_input::<yaxpeax_pic17::PIC17>(&buf, verbose),
+        "pic18" => crate::current_arch::decode_input::<yaxpeax_pic18::PIC18>(&buf, verbose),
+        "m16c" => crate::current_arch::decode_input::<yaxpeax_m16c::M16C>(&buf, verbose),
+        "6502" => crate::legacy_arch::decode_input::<yaxpeax_6502::N6502>(&buf, verbose),
+        "lc87" => crate::current_arch::decode_input::<yaxpeax_lc87::LC87>(&buf, verbose),
         //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
             let seg_idx = arch_str.find(|c| c == '+' || c == '-').unwrap_or(arch_str.len());
             let wps = |base| with_parsed_superh(base, &arch_str[seg_idx..],
-                |decoder| decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, verbose));
+                |decoder| crate::legacy_arch::decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, verbose));
             match &arch_str[0..seg_idx] {
                 "sh" => wps(yaxpeax_superh::SuperHDecoder::SH1),
                 "sh2" => wps(yaxpeax_superh::SuperHDecoder::SH2),
@@ -150,46 +153,106 @@ fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
     })
 }
 
-fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
-where
-    A::Instruction: fmt::Display,
-{
-    decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
-}
+// yaxpeax-arch, implemented by all decoders here, is required at incompatible versions by
+// different decoders. implement the actual decode-and-print behavior on both versions of
+// yaxpeax-arch while older decoders are still being updated.
+mod current_arch {
+    use yaxpeax_arch_02::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction, Reader, U8Reader};
+    use std::fmt;
+    use num_traits::identities::Zero;
 
-fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
-where
-    A::Instruction: fmt::Display,
-{
-    let start = A::Address::zero();
-    let mut addr = start;
-    loop {
-        match decoder.decode(buf[addr.to_linear()..].iter().cloned()) {
-            Ok(inst) => {
-                println!(
-                    "{:#010x}: {:14}: {}",
-                    addr.to_linear(),
-                    hex::encode(
-                        &buf[addr.to_linear()..]
-                            [..A::Address::zero().wrapping_offset(inst.len()).to_linear()]
-                    ),
-                    inst
-                );
-                if verbose {
-                    println!("  {:?}", inst);
-                    if !inst.well_defined() {
-                        println!("  not well-defined");
+    pub(crate) fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
+    where
+        A::Instruction: fmt::Display, for<'data> U8Reader<'data>: Reader<A::Address, A::Word>,
+    {
+        decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
+    }
+
+    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
+    where
+        A::Instruction: fmt::Display, for<'data> U8Reader<'data>: Reader<A::Address, A::Word>,
+    {
+        let start = A::Address::zero();
+        let mut addr = start;
+        loop {
+            let mut reader = U8Reader::new(&buf[addr.to_linear()..]);
+            match decoder.decode(&mut reader) {
+                Ok(inst) => {
+                    println!(
+                        "{:#010x}: {:14}: {}",
+                        addr.to_linear(),
+                        hex::encode(
+                            &buf[addr.to_linear()..]
+                                [..A::Address::zero().wrapping_offset(inst.len()).to_linear()]
+                        ),
+                        inst
+                    );
+                    if verbose {
+                        println!("  {:?}", inst);
+                        if !inst.well_defined() {
+                            println!("  not well-defined");
+                        }
                     }
+                    addr += inst.len();
                 }
-                addr += inst.len();
+                Err(e) => {
+                    println!("{:#010x}: {}", addr.to_linear(), e);
+                    addr += A::Instruction::min_size();
+                }
             }
-            Err(e) => {
-                println!("{:#010x}: {}", addr.to_linear(), e);
-                addr += A::Instruction::min_size();
+            if addr.to_linear() >= buf.len() {
+                break;
             }
         }
-        if addr.to_linear() >= buf.len() {
-            break;
+    }
+}
+
+mod legacy_arch {
+    use yaxpeax_arch_01::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction};
+    use std::fmt;
+    use num_traits::identities::Zero;
+
+    pub(crate) fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
+    where
+        A::Instruction: fmt::Display,
+    {
+        decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
+    }
+
+    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
+    where
+        A::Instruction: fmt::Display,
+    {
+        let start = A::Address::zero();
+        let mut addr = start;
+        loop {
+            match decoder.decode(buf[addr.to_linear()..].iter().cloned()) {
+                Ok(inst) => {
+                    println!(
+                        "{:#010x}: {:14}: {}",
+                        addr.to_linear(),
+                        hex::encode(
+                            &buf[addr.to_linear()..]
+                                [..A::Address::zero().wrapping_offset(inst.len()).to_linear()]
+                        ),
+                        inst
+                    );
+                    if verbose {
+                        println!("  {:?}", inst);
+                        if !inst.well_defined() {
+                            println!("  not well-defined");
+                        }
+                    }
+                    addr += inst.len();
+                }
+                Err(e) => {
+                    println!("{:#010x}: {}", addr.to_linear(), e);
+                    addr += A::Instruction::min_size();
+                }
+            }
+            if addr.to_linear() >= buf.len() {
+                break;
+            }
         }
     }
 }
