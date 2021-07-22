@@ -1,3 +1,7 @@
+## 0.2.9
+
+* bump yaxpeax-x86 to include fixes for a few decode errors primarily impacting 16-bit modes
+
 ## 0.2.8
 
 * link to the right cratesio badge...

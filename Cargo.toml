@@ -1,6 +1,6 @@
 [package]
 name = "yaxpeax-dis"
-version = "0.2.8"
+version = "0.2.9"
 authors = ["iximeow <me@iximeow.net>"]
 license = "0BSD"
 edition = "2018"
@@ -30,7 +30,7 @@ yaxpeax-msp430 = { version = "0.1.0" }
 yaxpeax-lc87 = { version = "1.0.0" }
 yaxpeax-pic17 = { version = "0.1.0" }
 yaxpeax-pic18 = { version = "0.1.0" }
-yaxpeax-x86 = { version = "1.0.3" }
+yaxpeax-x86 = { version = "1.0.4" }
 yaxpeax-ia64 = { version = "0.2.1" }
 yaxpeax-superh = { version = "0.1.0" }
 yaxpeax-6502 = { version = "0.0.1" }
