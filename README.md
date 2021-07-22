@@ -1,6 +1,6 @@
 ## yaxpeax-dis
 
-[![crate](https://img.shields.io/crates/v/yaxpeax-x86.svg?logo=rust)](https://crates.io/crates/yaxpeax-x86)
+[![crate](https://img.shields.io/crates/v/yaxpeax-dis.svg?logo=rust)](https://crates.io/crates/yaxpeax-dis)
 
 `yaxpeax-dis` is the repo providing `yaxdis`, a small and very naive disassembler to exercise decoders in the [yaxpeax project](https://git.iximeow.net/yaxpeax-arch/about/). it does not (currently?) do much other than disassembling hex input, and is mostly useful as an example of how to use decoders and spot-checking a specific instruction's decoding.
 
