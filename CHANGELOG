@@ -1,3 +1,7 @@
+## 0.2.6
+
+* update readme to describe all supported architectures (+x86_32, x86_16, lc87)
+
 ## 0.2.5
 
 * update yaxpeax-x86 to 1.0, bringing in avx512 support and x86_32, x86_16 decoding

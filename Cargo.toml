@@ -1,6 +1,6 @@
 [package]
 name = "yaxpeax-dis"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["iximeow <me@iximeow.net>"]
 license = "0BSD"
 edition = "2018"

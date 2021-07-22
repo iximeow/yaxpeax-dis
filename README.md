@@ -23,5 +23,5 @@ or `yaxdis -a ia64 e38000000061e200000042c0e1803080`, producing:
 
 `yaxdis` also takes a `-v` flag to emit more verbose information (really, a `Debug` display of decoded instructions).
 
-## supported architectures / ! user beware !
-`yaxdis` should support all architectures listed in the [yaxpeax-arch readme](https://git.iximeow.net/yaxpeax-arch/). that is currently `x86_64`, `armv7`, `armv8`, `mips`, `msp430`, `pic17`, `pic18`, `m16c`, `avr`, `ia64`, `6502`, and `sh`/`sh2`/`j2`/`sh3`/`sh4`. specific levels of support and stability vary, beware.
+## supported architectures
+`yaxdis` should support all architectures listed in the [yaxpeax-arch readme](https://git.iximeow.net/yaxpeax-arch/). that is currently `x86_64`, `x86_32`, `x86_16`, `armv7`, `armv8`, `mips`, `msp430`, `pic17`, `pic18`, `m16c`, `avr`, `ia64`, `6502`, `lc87`, and `sh`/`sh2`/`j2`/`sh3`/`sh4`. specific levels of support and stability vary.
