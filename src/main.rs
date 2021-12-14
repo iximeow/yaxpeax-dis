@@ -1,10 +1,10 @@
-use clap::*;
-
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::{fmt, io};
 use std::collections::BTreeSet;
 
 fn main() {
+    use clap::*;
     let _ = include_str!("../Cargo.toml");
     let app = app_from_crate!()
         .arg(
@@ -81,29 +81,31 @@ fn main() {
     };
     let verbose = matches.occurrences_of("verbose") > 0;
 
+    let printer = Printer { stdout: io::stdout(), verbose };
+
     match arch_str {
         "x86_64" |
-        "x86:64" => crate::current_arch::decode_input::<yaxpeax_x86::long_mode::Arch>(&buf, verbose),
+        "x86:64" => crate::current_arch::decode_input::<yaxpeax_x86::long_mode::Arch>(&buf, &printer),
         "x86_32" |
-        "x86:32" => crate::current_arch::decode_input::<yaxpeax_x86::protected_mode::Arch>(&buf, verbose),
+        "x86:32" => crate::current_arch::decode_input::<yaxpeax_x86::protected_mode::Arch>(&buf, &printer),
         "x86_16" |
-        "x86:16" => crate::current_arch::decode_input::<yaxpeax_x86::real_mode::Arch>(&buf, verbose),
-        "ia64" => crate::current_arch::decode_input::<yaxpeax_ia64::IA64>(&buf, verbose),
-        "avr" => crate::current_arch::decode_input::<yaxpeax_avr::AVR>(&buf, verbose),
-        "armv7" => crate::current_arch::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, verbose),
-        "armv8" => crate::current_arch::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, verbose),
-        "mips" => crate::current_arch::decode_input::<yaxpeax_mips::MIPS>(&buf, verbose),
-        "msp430" => crate::current_arch::decode_input::<yaxpeax_msp430::MSP430>(&buf, verbose),
-        "pic17" => crate::current_arch::decode_input::<yaxpeax_pic17::PIC17>(&buf, verbose),
-        "pic18" => crate::current_arch::decode_input::<yaxpeax_pic18::PIC18>(&buf, verbose),
-        "m16c" => crate::current_arch::decode_input::<yaxpeax_m16c::M16C>(&buf, verbose),
-        "6502" => crate::legacy_arch::decode_input::<yaxpeax_6502::N6502>(&buf, verbose),
-        "lc87" => crate::current_arch::decode_input::<yaxpeax_lc87::LC87>(&buf, verbose),
+        "x86:16" => crate::current_arch::decode_input::<yaxpeax_x86::real_mode::Arch>(&buf, &printer),
+        "ia64" => crate::current_arch::decode_input::<yaxpeax_ia64::IA64>(&buf, &printer),
+        "avr" => crate::current_arch::decode_input::<yaxpeax_avr::AVR>(&buf, &printer),
+        "armv7" => crate::current_arch::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, &printer),
+        "armv8" => crate::current_arch::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, &printer),
+        "mips" => crate::current_arch::decode_input::<yaxpeax_mips::MIPS>(&buf, &printer),
+        "msp430" => crate::current_arch::decode_input::<yaxpeax_msp430::MSP430>(&buf, &printer),
+        "pic17" => crate::current_arch::decode_input::<yaxpeax_pic17::PIC17>(&buf, &printer),
+        "pic18" => crate::current_arch::decode_input::<yaxpeax_pic18::PIC18>(&buf, &printer),
+        "m16c" => crate::current_arch::decode_input::<yaxpeax_m16c::M16C>(&buf, &printer),
+        "6502" => crate::legacy_arch::decode_input::<yaxpeax_6502::N6502>(&buf, &printer),
+        "lc87" => crate::current_arch::decode_input::<yaxpeax_lc87::LC87>(&buf, &printer),
         //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
             let seg_idx = arch_str.find(|c| c == '+' || c == '-').unwrap_or(arch_str.len());
             let wps = |base| with_parsed_superh(base, &arch_str[seg_idx..],
-                |decoder| crate::legacy_arch::decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, verbose));
+                |decoder| crate::legacy_arch::decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, &printer));
             match &arch_str[0..seg_idx] {
                 "sh" => wps(yaxpeax_superh::SuperHDecoder::SH1),
                 "sh2" => wps(yaxpeax_superh::SuperHDecoder::SH2),
@@ -153,6 +155,39 @@ fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
     })
 }
 
+struct Printer {
+    stdout: io::Stdout,
+    verbose: bool,
+}
+
+impl Printer {
+    // shared generic function to keep display logic consistent regardless of yaxpeax-arch version
+    fn print_instr<I, E>(&self, rest: &[u8], addr: usize, x: Result<(usize, bool, I), E>)
+    where
+        I: fmt::Display + fmt::Debug,
+        E: fmt::Display,
+    {
+        // TODO: lock stdout for the whole time? What if an arch implementation tries to log something?
+        let mut stdout = self.stdout.lock();
+        write!(stdout, "{:#010x}: ", addr).unwrap();
+        match x {
+            Ok((inst_len, well_defined, inst)) => {
+                writeln!(stdout, "{:14}: {}", hex::encode(&rest[..inst_len]), inst)
+                    .unwrap();
+                if self.verbose {
+                    writeln!(stdout, "  {:?}", inst).unwrap();
+                    if !well_defined {
+                        writeln!(stdout, "  not well-defined").unwrap();
+                    }
+                }
+            }
+            Err(e) => {
+                writeln!(stdout, "{}", e).unwrap();
+            }
+        }
+    }
+}
+
 // yaxpeax-arch, implemented by all decoders here, is required at incompatible versions by
 // different decoders. implement the actual decode-and-print behavior on both versions of
 // yaxpeax-arch while older decoders are still being updated.
@@ -160,49 +195,36 @@ mod current_arch {
     use yaxpeax_arch_02::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction, Reader, U8Reader};
     use std::fmt;
     use num_traits::identities::Zero;
+    use super::Printer;
 
-    pub(crate) fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
+    pub(crate) fn decode_input<A: Arch>(buf: &[u8], printer: &Printer)
     where
         A::Instruction: fmt::Display, for<'data> U8Reader<'data>: Reader<A::Address, A::Word>,
     {
-        decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
+        decode_input_with_decoder::<A>(A::Decoder::default(), buf, printer);
     }
 
-    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
+    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], printer: &Printer)
     where
         A::Instruction: fmt::Display, for<'data> U8Reader<'data>: Reader<A::Address, A::Word>,
     {
-        let start = A::Address::zero();
-        let mut addr = start;
-        loop {
-            let mut reader = U8Reader::new(&buf[addr.to_linear()..]);
-            match decoder.decode(&mut reader) {
-                Ok(inst) => {
-                    println!(
-                        "{:#010x}: {:14}: {}",
-                        addr.to_linear(),
-                        hex::encode(
-                            &buf[addr.to_linear()..]
-                                [..A::Address::zero().wrapping_offset(inst.len()).to_linear()]
-                        ),
-                        inst
-                    );
-                    if verbose {
-                        println!("  {:?}", inst);
-                        if !inst.well_defined() {
-                            println!("  not well-defined");
-                        }
-                    }
-                    addr += inst.len();
-                }
-                Err(e) => {
-                    println!("{:#010x}: {}", addr.to_linear(), e);
-                    addr += A::Instruction::min_size();
-                }
-            }
-            if addr.to_linear() >= buf.len() {
-                break;
-            }
+        let mut addr = A::Address::zero();
+        while let Some(rest) = buf.get(addr.to_linear()..).filter(|v| !v.is_empty()) {
+            let mut reader = U8Reader::new(rest);
+            let res = decoder.decode(&mut reader);
+            let advance_addr = match &res {
+                Ok(inst) => inst.len(),
+                Err(_) => A::Instruction::min_size(),
+            };
+            let generic_res = res.map(|inst| {
+                (
+                    A::Address::zero().wrapping_offset(inst.len()).to_linear(),
+                    inst.well_defined(),
+                    inst,
+                )
+            });
+            printer.print_instr(rest, addr.to_linear(), generic_res);
+            addr += advance_addr;
         }
     }
 }
@@ -211,48 +233,35 @@ mod legacy_arch {
     use yaxpeax_arch_01::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction};
     use std::fmt;
     use num_traits::identities::Zero;
+    use super::Printer;
 
-    pub(crate) fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
+    pub(crate) fn decode_input<A: Arch>(buf: &[u8], printer: &Printer)
     where
         A::Instruction: fmt::Display,
     {
-        decode_input_with_decoder::<A>(A::Decoder::default(), buf, verbose);
+        decode_input_with_decoder::<A>(A::Decoder::default(), buf, printer);
     }
 
-    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], verbose: bool)
+    pub(crate) fn decode_input_with_decoder<A: Arch>(decoder: A::Decoder, buf: &[u8], printer: &Printer)
     where
         A::Instruction: fmt::Display,
     {
-        let start = A::Address::zero();
-        let mut addr = start;
-        loop {
-            match decoder.decode(buf[addr.to_linear()..].iter().cloned()) {
-                Ok(inst) => {
-                    println!(
-                        "{:#010x}: {:14}: {}",
-                        addr.to_linear(),
-                        hex::encode(
-                            &buf[addr.to_linear()..]
-                                [..A::Address::zero().wrapping_offset(inst.len()).to_linear()]
-                        ),
-                        inst
-                    );
-                    if verbose {
-                        println!("  {:?}", inst);
-                        if !inst.well_defined() {
-                            println!("  not well-defined");
-                        }
-                    }
-                    addr += inst.len();
-                }
-                Err(e) => {
-                    println!("{:#010x}: {}", addr.to_linear(), e);
-                    addr += A::Instruction::min_size();
-                }
-            }
-            if addr.to_linear() >= buf.len() {
-                break;
-            }
+        let mut addr = A::Address::zero();
+        while let Some(rest) = buf.get(addr.to_linear()..).filter(|v| !v.is_empty()) {
+            let res = decoder.decode(rest.iter().copied());
+            let advance_addr = match &res {
+                Ok(inst) => inst.len(),
+                Err(_) => A::Instruction::min_size(),
+            };
+            let generic_res = res.map(|inst| {
+                (
+                    A::Address::zero().wrapping_offset(inst.len()).to_linear(),
+                    inst.well_defined(),
+                    inst,
+                )
+            });
+            printer.print_instr(rest, addr.to_linear(), generic_res);
+            addr += advance_addr;
         }
     }
 }
