@@ -26,7 +26,7 @@ itertools = "0.10.1"
 yaxpeax-arch-02 = { package = "yaxpeax-arch", version = "0.2.4" , default-features = false, features = ["std"] }
 yaxpeax-arch-01 = { package = "yaxpeax-arch", version = "0.0.5" , default-features = false }
 
-yaxpeax-arm = { version = "0.1.1", default-features = false, features = ["std"] }
+yaxpeax-arm = { version = "0.2.3", default-features = false, features = ["std"] }
 yaxpeax-avr = { version = "0.1.0" }
 yaxpeax-m16c = { version = "0.1.0" }
 yaxpeax-mips = { version = "0.1.0" }
@@ -34,7 +34,7 @@ yaxpeax-msp430 = { version = "0.1.0", path = "/toy/yaxpeax/arch/msp430" }
 yaxpeax-lc87 = { version = "1.0.0" }
 yaxpeax-pic17 = { version = "0.1.0" }
 yaxpeax-pic18 = { version = "0.1.0" }
-yaxpeax-x86 = { version = "1.1.0", default-features = false, features = ["fmt", "std"] }
+yaxpeax-x86 = { version = "1.1.3", default-features = false, features = ["fmt", "std"] }
 yaxpeax-ia64 = { version = "0.2.1", path = "/toy/yaxpeax/arch/ia64" }
 yaxpeax-superh = { version = "0.1.0" }
 yaxpeax-6502 = { version = "0.0.1" }

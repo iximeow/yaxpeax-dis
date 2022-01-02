@@ -15,7 +15,7 @@ fn main() {
                 .validator(|a| {
                     if ["x86_64", "x86_32", "x86_16",
                         "x86:64", "x86:32", "x86:16",
-                        "ia64", "armv7", "armv8", "avr", "mips", "msp430",
+                        "ia64", "armv7", "armv7-t", "armv8", "avr", "mips", "msp430",
                         "pic17", "pic18", "m16c", "6502", "lc87"].contains(&&a[..]) ||
                        (["sh", "sh2", "sh3", "sh4", "j2"].contains(
                              &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
@@ -24,7 +24,7 @@ fn main() {
                         Ok(())
                     } else {
                         Err("possible values: x86_64, x86_32, x86_16, x86:64, x86:32, x86:16, \
-                                              ia64, armv7, armv8, avr, mips, msp430, pic17, pic18, \
+                                              ia64, armv7, armv7-t, armv8, avr, mips, msp430, pic17, pic18, \
                                               m16c, 6502, lc87, {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
                             .to_string())
                     }
@@ -92,6 +92,7 @@ fn main() {
         "ia64" => crate::current_arch::decode_input::<yaxpeax_ia64::IA64>(&buf, verbose),
         "avr" => crate::current_arch::decode_input::<yaxpeax_avr::AVR>(&buf, verbose),
         "armv7" => crate::current_arch::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, verbose),
+        "armv7-t" => crate::current_arch::decode_armv7_thumb(&buf, verbose),
         "armv8" => crate::current_arch::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, verbose),
         "mips" => crate::current_arch::decode_input::<yaxpeax_mips::MIPS>(&buf, verbose),
         // "msp430" => crate::current_arch::decode_input_with_annotation::<yaxpeax_msp430::MSP430>(&buf, verbose),
@@ -387,11 +388,17 @@ mod current_arch {
                 }
             }
             use std::fmt::Write;
-            let _ = write!(res, "{}", fields[field_index].elements[0].description);
+            let _ = write!(res, "{:?}", fields[field_index].elements[0]);
             res.push_str("\n");
         }
 
         println!("{}", res);
+    }
+
+    pub(crate) fn decode_armv7_thumb(buf: &[u8], verbose: bool) {
+        let mut decoder = <yaxpeax_arm::armv7::ARMv7 as Arch>::Decoder::default();
+        decoder.set_thumb_mode(true);
+        decode_input_with_decoder::<yaxpeax_arm::armv7::ARMv7>(decoder, buf, verbose);
     }
 
     pub(crate) fn decode_input<A: Arch>(buf: &[u8], verbose: bool)
