@@ -161,9 +161,15 @@ struct Printer {
     verbose: bool,
 }
 
+struct InstDetails<I: fmt::Display + fmt::Debug> {
+    pub inst_len: usize,
+    pub well_defined: bool,
+    pub inst: I,
+}
+
 impl Printer {
     // shared generic function to keep display logic consistent regardless of yaxpeax-arch version
-    fn print_instr<I, E>(&self, rest: &[u8], addr: usize, x: Result<(usize, bool, I), E>)
+    fn print_instr<I, E>(&self, rest: &[u8], addr: usize, inst_res: Result<InstDetails<I>, E>)
     where
         I: fmt::Display + fmt::Debug,
         E: fmt::Display,
@@ -171,8 +177,8 @@ impl Printer {
         // TODO: lock stdout for the whole time? What if an arch implementation tries to log something?
         let mut stdout = self.stdout.lock();
         write!(stdout, "{:#010x}: ", addr).unwrap();
-        match x {
-            Ok((inst_len, well_defined, inst)) => {
+        match inst_res {
+            Ok(InstDetails { inst_len, well_defined, inst }) => {
                 writeln!(stdout, "{:14}: {}", hex::encode(&rest[..inst_len]), inst)
                     .unwrap();
                 if self.verbose {
@@ -230,11 +236,11 @@ mod arch_02 {
                 Err(_) => A::Instruction::min_size(),
             };
             let generic_res = res.map(|inst| {
-                (
-                    A::Address::zero().wrapping_offset(inst.len()).to_linear(),
-                    inst.well_defined(),
+                crate::InstDetails {
+                    inst_len: A::Address::zero().wrapping_offset(inst.len()).to_linear(),
+                    well_defined: inst.well_defined(),
                     inst,
-                )
+                }
             });
             printer.print_instr(rest, addr.to_linear(), generic_res);
             addr += advance_addr;
