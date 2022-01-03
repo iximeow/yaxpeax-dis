@@ -15,7 +15,7 @@ fn main() {
                 .validator(|a| {
                     if ["x86_64", "x86_32", "x86_16",
                         "x86:64", "x86:32", "x86:16",
-                        "ia64", "armv7", "armv8", "avr", "mips", "msp430",
+                        "ia64", "armv7", "armv7-t","armv8", "avr", "mips", "msp430",
                         "pic17", "pic18", "m16c", "6502", "lc87"].contains(&&a[..]) ||
                        (["sh", "sh2", "sh3", "sh4", "j2"].contains(
                              &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
@@ -24,7 +24,7 @@ fn main() {
                         Ok(())
                     } else {
                         Err("possible values: x86_64, x86_32, x86_16, x86:64, x86:32, x86:16, \
-                                              ia64, armv7, armv8, avr, mips, msp430, pic17, pic18, \
+                                              ia64, armv7, armv7-t, armv8, avr, mips, msp430, pic17, pic18, \
                                               m16c, 6502, lc87, {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
                             .to_string())
                     }
@@ -93,6 +93,7 @@ fn main() {
         "ia64" => arch_02::decode_input::<yaxpeax_ia64::IA64>(&buf, &printer),
         "avr" => arch_02::decode_input::<yaxpeax_avr::AVR>(&buf, &printer),
         "armv7" => arch_02::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, &printer),
+        "armv7-t" => arch_02::decode_armv7_thumb(&buf, &printer),
         "armv8" => arch_02::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, &printer),
         "mips" => arch_02::decode_input::<yaxpeax_mips::MIPS>(&buf, &printer),
         "msp430" => arch_02::decode_input::<yaxpeax_msp430::MSP430>(&buf, &printer),
@@ -205,6 +206,11 @@ mod arch_02 {
         for<'data> U8Reader<'data>: Reader<A::Address, A::Word>,
     {
         decode_input_with_decoder::<A>(A::Decoder::default(), buf, printer);
+    }
+
+    pub(crate) fn decode_armv7_thumb(buf: &[u8], printer: &Printer) {
+        let decoder = yaxpeax_arm::armv7::InstDecoder::default_thumb();
+        decode_input_with_decoder::<yaxpeax_arm::armv7::ARMv7>(decoder, buf, printer);
     }
 
     pub(crate) fn decode_input_with_decoder<A: Arch>(
