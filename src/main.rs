@@ -161,7 +161,7 @@ fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
 // yaxpeax-arch while older decoders are still being updated.
 mod current_arch {
     use yaxpeax_arch_02::{AddressBase, Arch, Decoder, Instruction, LengthedInstruction, Reader, U8Reader};
-    use yaxpeax_arch_02::{AnnotatingDecoder, FieldDescription, VecSink};
+    use yaxpeax_arch_02::annotation::{AnnotatingDecoder, FieldDescription, VecSink};
     use std::fmt;
     use num_traits::identities::Zero;
 
@@ -351,19 +351,21 @@ mod current_arch {
         let mut fudge = 0;
         let mut col = [b' '; 160];
 
+        let mut line_end = 0;
         for i in 0..160 {
-            if (i >> 3) >= data.len() {
+            if (i >> 3) > data.len() {
                 continue;
             }
 
             if boundaries[i] {
                 col[i + fudge] = b'|';
+                line_end = i + fudge + 1;
             }
             if fudge_bits[i] {
                 fudge += 1;
             }
         }
-        res.push_str(unsafe { std::str::from_utf8_unchecked(&col) });
+        res.push_str(unsafe { std::str::from_utf8_unchecked(&col[..line_end]) });
         res.push_str("\n");
 
         for (field_index, bit) in boundary_order {
@@ -371,7 +373,7 @@ mod current_arch {
             let mut col = [b' '; 160];
 
             for i in 0..160 {
-                if (i >> 3) >= data.len() {
+                if (i >> 3) > data.len() {
                     continue;
                 }
 
