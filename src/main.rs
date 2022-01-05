@@ -1,56 +1,103 @@
-use std::fs::File;
-use std::io::{Read, Write};
-use std::{fmt, io};
+use std::io::Write;
+use std::{fmt, io, fs};
+use std::str::FromStr;
+use std::path::PathBuf;
+
+use clap::Parser;
+
+#[derive(Debug)]
+enum Architecture {
+    X86_64,
+    X86_32,
+    X86_16,
+    IA64,
+    AVR,
+    ARMv7,
+    ARMv7Thumb,
+    ARMv8,
+    MIPS,
+    MSP430,
+    PIC17,
+    PIC18,
+    M16C,
+    N6502,
+    LC87,
+    // PIC24,
+    SuperH(yaxpeax_superh::SuperHDecoder),
+}
+
+impl fmt::Display for Architecture {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
+}
+
+impl FromStr for Architecture {
+    type Err = &'static str;
+    fn from_str(arch_str: &str) -> Result<Self, Self::Err> {
+        use Architecture::*;
+        let err_str = "possible values: x86_64, x86_32, x86_16, x86:64, x86:32, x86:16, \
+                                        ia64, armv7, armv7-t, armv8, avr, mips, msp430, pic17, pic18, \
+                                        m16c, 6502, lc87, {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*";
+        let arch = match arch_str {
+            "x86_64" | "x86:64" => X86_64,
+            "x86_32" | "x86:32" => X86_32,
+            "x86_16" | "x86:16" => X86_16,
+            "ia64" => IA64,
+            "avr" => AVR,
+            "armv7" => ARMv7,
+            "armv7-t" => ARMv7Thumb,
+            "armv8" => ARMv8,
+            "mips" => MIPS,
+            "msp430" => MSP430,
+            "pic17" => PIC17,
+            "pic18" => PIC18,
+            "m16c" => M16C,
+            "6502" => N6502,
+            "lc87" => LC87,
+            //        "pic24" => PIC24,
+            _ => {
+                let seg_idx = arch_str.find(&['+', '-'][..]).unwrap_or(arch_str.len());
+                let (base, features) = arch_str.split_at(seg_idx);
+                let decoder = match base {
+                    "sh" => yaxpeax_superh::SuperHDecoder::SH1,
+                    "sh2" => yaxpeax_superh::SuperHDecoder::SH2,
+                    "sh3" => yaxpeax_superh::SuperHDecoder::SH3,
+                    "sh4" => yaxpeax_superh::SuperHDecoder::SH4,
+                    "j2" => yaxpeax_superh::SuperHDecoder::J2,
+                    _ => return Err(err_str),
+                };
+                SuperH(parse_superh(decoder, features))
+            }
+        };
+        Ok(arch)
+    }
+}
+
+#[derive(Parser)]
+#[clap(about, version, author)]
+struct Args {
+    /// architecture to disassemble input as.
+    #[clap(short, long, default_value = "x86_64")]
+    architecture: Architecture,
+
+    /// file of bytes to decode
+    #[clap(short, long, parse(from_os_str), conflicts_with = "data")]
+    file: Option<PathBuf>,
+
+    /// increased detail when decoding instructions
+    #[clap(short, long, parse(from_occurrences))]
+    verbose: u8,
+
+    /// hex bytes to decode by the selected architecture. for example, try -a x86_64 33c0c3
+    #[clap(required_unless_present = "file")]
+    data: Option<String>,
+}
 
 fn main() {
-    use clap::*;
-    let _ = include_str!("../Cargo.toml");
-    let app = app_from_crate!()
-        .arg(
-            Arg::with_name("arch")
-                .short("a")
-                .long("--architecture")
-                .takes_value(true)
-                .validator(|a| {
-                    if ["x86_64", "x86_32", "x86_16",
-                        "x86:64", "x86:32", "x86:16",
-                        "ia64", "armv7", "armv7-t","armv8", "avr", "mips", "msp430",
-                        "pic17", "pic18", "m16c", "6502", "lc87"].contains(&&a[..]) ||
-                       (["sh", "sh2", "sh3", "sh4", "j2"].contains(
-                             &&a[0..a.find(&['+', '-'][..]).unwrap_or(a.len())]) &&
-                        a.split(&['+', '-'][..]).skip(1).all(
-                            |f| ["be", "mmu", "fpu", "f64", "j2"].contains(&f))) {
-                        Ok(())
-                    } else {
-                        Err("possible values: x86_64, x86_32, x86_16, x86:64, x86:32, x86:16, \
-                                              ia64, armv7, armv7-t, armv8, avr, mips, msp430, pic17, pic18, \
-                                              m16c, 6502, lc87, {sh{,2,3,4},j2}[[+-]{be,mmu,fpu,f64,j2}]*"
-                            .to_string())
-                    }
-                })
-                .help("architecture to disassemble input as."),
-        )
-        .arg(
-            Arg::with_name("file")
-                .short("f")
-                .long("file")
-                .takes_value(true)
-                .help("file of bytes to decode"),
-        )
-        .arg(
-            Arg::with_name("verbose")
-                .short("v")
-                .long("--verbose")
-                .help("increased detail when decoding instructions"),
-        )
-        .arg(Arg::with_name("data").help(
-            "hex bytes to decode by the selected architecture. for example, try -a x86_64 33c0c3",
-        ));
+    let args = Args::parse();
 
-    let matches = app.get_matches();
-
-    let arch_str = matches.value_of("arch").unwrap_or("x86_64");
-    let buf: Vec<u8> = match matches.value_of("data") {
+    let buf: Vec<u8> = match args.data {
         Some(data) => match hex::decode(data) {
             Ok(buf) => buf,
             Err(e) => {
@@ -59,62 +106,39 @@ fn main() {
             }
         },
         None => {
-            let mut v = Vec::new();
-            match matches.value_of("file") {
-                Some(name) => match File::open(name) {
-                    Ok(mut f) => {
-                        f.read_to_end(&mut v).expect("can read the file");
-                        v
-                    }
-                    Err(e) => {
-                        eprintln!("error opening {}: {}", name, e);
-                        return;
-                    }
-                },
-                None => {
-                    eprintln!("data must be provided by either an argument consisting of hex bytes, or by the --file argument.");
+            let name = args.file.unwrap();
+            match fs::read(&name) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("error reading {}: {}", name.display(), e);
                     return;
                 }
             }
         }
     };
-    let verbose = matches.occurrences_of("verbose") > 0;
+    let verbose = args.verbose > 0;
 
     let printer = Printer { stdout: io::stdout(), verbose };
 
-    match arch_str {
-        "x86_64" |
-        "x86:64" => arch_02::decode_input_and_annotate::<yaxpeax_x86::long_mode::Arch>(&buf, &printer),
-        "x86_32" |
-        "x86:32" => arch_02::decode_input_and_annotate::<yaxpeax_x86::protected_mode::Arch>(&buf, &printer),
-        "x86_16" |
-        "x86:16" => arch_02::decode_input_and_annotate::<yaxpeax_x86::real_mode::Arch>(&buf, &printer),
-        "ia64" => arch_02::decode_input::<yaxpeax_ia64::IA64>(&buf, &printer),
-        "avr" => arch_02::decode_input::<yaxpeax_avr::AVR>(&buf, &printer),
-        "armv7" => arch_02::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, &printer),
-        "armv7-t" => arch_02::decode_armv7_thumb(&buf, &printer),
-        "armv8" => arch_02::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, &printer),
-        "mips" => arch_02::decode_input::<yaxpeax_mips::MIPS>(&buf, &printer),
-        "msp430" => arch_02::decode_input_and_annotate::<yaxpeax_msp430::MSP430>(&buf, &printer),
-        "pic17" => arch_02::decode_input::<yaxpeax_pic17::PIC17>(&buf, &printer),
-        "pic18" => arch_02::decode_input::<yaxpeax_pic18::PIC18>(&buf, &printer),
-        "m16c" => arch_02::decode_input::<yaxpeax_m16c::M16C>(&buf, &printer),
-        "6502" => arch_02::decode_input::<yaxpeax_6502::N6502>(&buf, &printer),
-        "lc87" => arch_02::decode_input::<yaxpeax_lc87::LC87>(&buf, &printer),
-        //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
-        other => {
-            let seg_idx = arch_str.find(&['+', '-'][..]).unwrap_or(arch_str.len());
-            let decode = |base| arch_02::decode_input_with_decoder::<yaxpeax_superh::SuperH>(
-                parse_superh(base, &arch_str[seg_idx..]), &buf, &printer);
-            match &arch_str[0..seg_idx] {
-                "sh" => decode(yaxpeax_superh::SuperHDecoder::SH1),
-                "sh2" => decode(yaxpeax_superh::SuperHDecoder::SH2),
-                "sh3" => decode(yaxpeax_superh::SuperHDecoder::SH3),
-                "sh4" => decode(yaxpeax_superh::SuperHDecoder::SH4),
-                "j2" => decode(yaxpeax_superh::SuperHDecoder::J2),
-                _ => println!("unsupported architecture: {}", other),
-            }
-        }
+    use Architecture::*;
+    match args.architecture {
+        X86_64 => arch_02::decode_input_and_annotate::<yaxpeax_x86::long_mode::Arch>(&buf, &printer),
+        X86_32 => arch_02::decode_input_and_annotate::<yaxpeax_x86::protected_mode::Arch>(&buf, &printer),
+        X86_16 => arch_02::decode_input_and_annotate::<yaxpeax_x86::real_mode::Arch>(&buf, &printer),
+        IA64 => arch_02::decode_input::<yaxpeax_ia64::IA64>(&buf, &printer),
+        AVR => arch_02::decode_input::<yaxpeax_avr::AVR>(&buf, &printer),
+        ARMv7 => arch_02::decode_input::<yaxpeax_arm::armv7::ARMv7>(&buf, &printer),
+        ARMv7Thumb => arch_02::decode_armv7_thumb(&buf, &printer),
+        ARMv8 => arch_02::decode_input::<yaxpeax_arm::armv8::a64::ARMv8>(&buf, &printer),
+        MIPS => arch_02::decode_input::<yaxpeax_mips::MIPS>(&buf, &printer),
+        MSP430 => arch_02::decode_input_and_annotate::<yaxpeax_msp430::MSP430>(&buf, &printer),
+        PIC17 => arch_02::decode_input::<yaxpeax_pic17::PIC17>(&buf, &printer),
+        PIC18 => arch_02::decode_input::<yaxpeax_pic18::PIC18>(&buf, &printer),
+        M16C => arch_02::decode_input::<yaxpeax_m16c::M16C>(&buf, &printer),
+        N6502 => arch_02::decode_input::<yaxpeax_6502::N6502>(&buf, &printer),
+        LC87 => arch_02::decode_input::<yaxpeax_lc87::LC87>(&buf, &printer),
+        //        PIC24 => decode_input::<yaxpeax_pic24::PIC24>(buf),
+        SuperH(decoder) => arch_02::decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, &printer),
     }
 }
 

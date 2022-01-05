@@ -17,7 +17,7 @@ path = "src/main.rs"
 yaxpeax-arch-02 = { package = "yaxpeax-arch", path = "/toy/yaxpeax/yaxpeax-arch/" }
 
 [dependencies]
-clap = "2.33"
+clap = { version = "3", features = ["derive"] }
 hex = "0.4.0"
 num-traits = "0.2.10"
 itertools = "0.10.1"
