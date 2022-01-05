@@ -407,10 +407,11 @@ dependencies = [
 
 [[package]]
 name = "yaxpeax-superh"
-version = "0.3.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c8cc1c381ba557a8d7e9fdb1399c36e4d9ce5a517b3e2bb504b261012403f4f"
+checksum = "c5281091585bd676e16313291703e8724889d4076672fc7b4d0e5b1718c54e2c"
 dependencies = [
+ "bitflags",
  "yaxpeax-arch",
 ]
 

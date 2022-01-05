@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::{fmt, io};
-use std::collections::BTreeSet;
 
 fn main() {
     use clap::*;
@@ -18,8 +17,8 @@ fn main() {
                         "ia64", "armv7", "armv7-t","armv8", "avr", "mips", "msp430",
                         "pic17", "pic18", "m16c", "6502", "lc87"].contains(&&a[..]) ||
                        (["sh", "sh2", "sh3", "sh4", "j2"].contains(
-                             &&a[0..a.find(|c| c == '+' || c == '-').unwrap_or(a.len())]) &&
-                        a.split(|c| c == '+' || c == '-').skip(1).all(
+                             &&a[0..a.find(&['+', '-'][..]).unwrap_or(a.len())]) &&
+                        a.split(&['+', '-'][..]).skip(1).all(
                             |f| ["be", "mmu", "fpu", "f64", "j2"].contains(&f))) {
                         Ok(())
                     } else {
@@ -104,32 +103,29 @@ fn main() {
         "lc87" => arch_02::decode_input::<yaxpeax_lc87::LC87>(&buf, &printer),
         //        "pic24" => decode_input::<yaxpeax_pic24::PIC24>(buf),
         other => {
-            let seg_idx = arch_str.find(|c| c == '+' || c == '-').unwrap_or(arch_str.len());
-            let wps = |base| with_parsed_superh(base, &arch_str[seg_idx..],
-                |decoder| arch_02::decode_input_with_decoder::<yaxpeax_superh::SuperH>(decoder, &buf, &printer));
+            let seg_idx = arch_str.find(&['+', '-'][..]).unwrap_or(arch_str.len());
+            let decode = |base| arch_02::decode_input_with_decoder::<yaxpeax_superh::SuperH>(
+                parse_superh(base, &arch_str[seg_idx..]), &buf, &printer);
             match &arch_str[0..seg_idx] {
-                "sh" => wps(yaxpeax_superh::SuperHDecoder::SH1),
-                "sh2" => wps(yaxpeax_superh::SuperHDecoder::SH2),
-                "sh3" => wps(yaxpeax_superh::SuperHDecoder::SH3),
-                "sh4" => wps(yaxpeax_superh::SuperHDecoder::SH4),
-                "j2" => wps(yaxpeax_superh::SuperHDecoder::J2),
+                "sh" => decode(yaxpeax_superh::SuperHDecoder::SH1),
+                "sh2" => decode(yaxpeax_superh::SuperHDecoder::SH2),
+                "sh3" => decode(yaxpeax_superh::SuperHDecoder::SH3),
+                "sh4" => decode(yaxpeax_superh::SuperHDecoder::SH4),
+                "j2" => decode(yaxpeax_superh::SuperHDecoder::J2),
                 _ => println!("unsupported architecture: {}", other),
             }
         }
     }
 }
 
-fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
-    mut based_on: yaxpeax_superh::SuperHDecoder, mut from: &str, func: F
-) {
-    let mut features = based_on.features.iter().copied().collect::<BTreeSet<_>>();
-
+fn parse_superh(mut based_on: yaxpeax_superh::SuperHDecoder, mut from: &str)
+    -> yaxpeax_superh::SuperHDecoder
+{
     while !from.is_empty() {
-        // This would be Not Trash if split_inclusive were stable; alas
         let op = from.chars().next().unwrap();
         from = &from[1..];
 
-        let next_feat_idx = from.find(|c| c == '+' || c == '-').unwrap_or(from.len());
+        let next_feat_idx = from.find(&['+', '-'][..]).unwrap_or(from.len());
         let feat = &from[0..next_feat_idx];
         from = &from[next_feat_idx..];
 
@@ -139,21 +135,18 @@ fn with_parsed_superh<F: FnOnce(yaxpeax_superh::SuperHDecoder)>(
             ('+', "f64") => based_on.fpscr_sz = true,
             ('-', "f64") => based_on.fpscr_sz = false,
 
-            ('+', "mmu") => { features.insert(yaxpeax_superh::SuperHFeature::MMU); },
-            ('-', "mmu") => { features.remove(&yaxpeax_superh::SuperHFeature::MMU); },
-            ('+', "fpu") => { features.insert(yaxpeax_superh::SuperHFeature::FPU); },
-            ('-', "fpu") => { features.remove(&yaxpeax_superh::SuperHFeature::FPU); },
-            ('+', "j2") => { features.insert(yaxpeax_superh::SuperHFeature::J2); },
-            ('-', "j2") => { features.remove(&yaxpeax_superh::SuperHFeature::J2); },
+            ('+', "mmu") => based_on.features.insert(yaxpeax_superh::SuperHFeatures::MMU),
+            ('-', "mmu") => based_on.features.remove(yaxpeax_superh::SuperHFeatures::MMU),
+            ('+', "fpu") => based_on.features.insert(yaxpeax_superh::SuperHFeatures::FPU),
+            ('-', "fpu") => based_on.features.remove(yaxpeax_superh::SuperHFeatures::FPU),
+            ('+', "j2") => based_on.features.insert(yaxpeax_superh::SuperHFeatures::J2),
+            ('-', "j2") => based_on.features.remove(yaxpeax_superh::SuperHFeatures::J2),
 
             pair => panic!("Who is {:?} and why was it not caught at parse time?", pair),
         }
     }
 
-    func(yaxpeax_superh::SuperHDecoder {
-        features: &features.into_iter().collect::<Vec<_>>()[..],
-        ..based_on
-    })
+    based_on
 }
 
 struct Printer {
