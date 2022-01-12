@@ -610,7 +610,7 @@ fn fmt_field_descriptions(bit_mapper: &BitPosition, fields: &[FieldRecord], data
     res.push_str(unsafe { std::str::from_utf8_unchecked(&col[..line_end]) });
     res.push_str("\n");
 
-    for (field_index, bit) in boundary_order {
+    for (_field_index, bit) in boundary_order {
         let mut fudge = 0;
         let mut col = [b' '; 160];
 
